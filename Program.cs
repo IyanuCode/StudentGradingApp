@@ -34,6 +34,8 @@ namespace StudentGradingApp
     }
     public class Program
     {
+        public static readonly List<string> SubjectNames = new();
+        public static readonly List<Student> Students = new();
         static void Main(string[] args)
         {
             InterfaceMenu();
@@ -49,7 +51,7 @@ namespace StudentGradingApp
 
             string? input = Console.ReadLine();
             switch (input)
-            {
+            {   
                 case "1":
                     Console.Clear();
                     StudentDetailsHandler();
@@ -70,41 +72,47 @@ namespace StudentGradingApp
         /*---------------This method handles the input of student details, including their subjects and scores.------------------*/
         public static void StudentDetailsHandler()
         {
-            List<string> subjectNames = new List<string>();
+              Console.Clear();
+            int j = 1;
+           Console.WriteLine("Start entering the subjects (type DONE when finished):");
 
-            Console.WriteLine("Only Enter the five(5) core subject For SS1:");
-            for (int j = 0; j < 5; j++)
-            {
-                Console.Write($"Enter Subject {j + 1}: ");
-                string? SubjectName = Console.ReadLine()?.Trim().ToUpper();
-                if (SubjectValidation(SubjectName, subjectNames) && SubjectName != null)
-                {
-                    // Create a new subject and add to the list
-                    Subject subject = new Subject { SubjectName = SubjectName };
+while (true)
+{
+    Console.Write($"Enter Subject {j}: ");   // 
+    string? subjectName = Console.ReadLine()?.Trim();
 
-                    // Add the subject to the list of subjects
-                    subjectNames.Add(subject.SubjectName);
-                }
-                else if (SubjectName != null && !subjectNames.Contains(SubjectName.ToUpper()))
-                {
-                    // Add the subject name to the list
-                    subjectNames.Add(SubjectName);
-                }
+ 
+    if (string.Equals(subjectName, "DONE", StringComparison.OrdinalIgnoreCase))
+    {
+        Console.Clear();
+        Console.WriteLine("Subject input completed.");
+        Console.WriteLine("Now entering student name and scores.");
+        StudentScoreHandler();
+        break;                              
+    }
 
-                else
-                {
-                    Console.WriteLine("Subject not added. Please try again.");
-                    j--; // Decrement j to repeat the input for the same subject
-                }
+   
+    if (SubjectValidation(subjectName, SubjectNames) && subjectName != null)
+    {
+        SubjectNames.Add(subjectName.ToUpper());  
+        j++;                                      
+        continue;                                 
+    }
 
-            }
-            /*--------------------------------------End of Subject Name Input ---------------------------------------------*/
+    
+        //Console.WriteLine(" Invalid subject. Please try again.");
+  
+}
+
+        
+        }
+        /*---------------------End of Student Details Input----------------------------------*/
 
 
             /*---------------------------------------handles subjects and scores.-------------------------------------------*/
 
-            List<Student> students = new List<Student>();
-            int i = 1;
+    public static void StudentScoreHandler(){
+                int i = 1;
 
             do
             {
@@ -112,14 +120,14 @@ namespace StudentGradingApp
                 Console.Write($"\n Enter Student {i} Name: ");
                 string? studentName = Console.ReadLine()?.Trim().ToUpper();
 
-                if (StudentNameValidation(studentName, students))
+                if (StudentNameValidation(studentName, Students))
                 {
                     // Create a new student and add to the list
                     Student student = new Student { Name = studentName };
-                    students.Add(student);
+                    Students.Add(student);
 
                     // Add subjects
-                    foreach (var subjectName in subjectNames)
+                    foreach (var subjectName in SubjectNames)
                     {
                         Console.Write($"Enter {subjectName} score: ");
                         if (int.TryParse(Console.ReadLine(), out int score) && score >= 0 && score <= 100)
@@ -130,31 +138,38 @@ namespace StudentGradingApp
                         {
                             Console.WriteLine("Invalid score. Please enter a number between 0 and 100.");
                             Console.WriteLine("You will need to re-enter the student and their subjects.");
-                            students.Remove(student); // Remove the student if score is invalid
+                            Students.Remove(student); // Remove the student if score is invalid
                             break;
                         }
-                        i++;
+                        
                     }
+                    i++;
 
-                    foreach (var studentd in students)
+                    foreach (var studentd in Students)
                     {
                         Console.WriteLine("\nStudent Details:");
                         Console.WriteLine($"👤 Name: {studentd.Name}");
 
                         foreach (var subject in studentd.Subjects)
                         {
-                            Console.WriteLine($"   📘 {subject.SubjectName}: {subject.Score}: {subject.Grade}");
+                            Console.WriteLine($"        📘 {subject.SubjectName}: {subject.Score}: {subject.Grade}");
                         }
 
                         Console.WriteLine(); // 
                     }
 
-                    Console.WriteLine("Press 1 to add another student, or any other key to exit:");
+                    Console.WriteLine("Press 1 to add another student");
+                    Console.WriteLine("Press 0 to go back to Main Menu");
+                    Console.WriteLine("Press any other key to exit");
                     string? choice = Console.ReadLine();
                     if (choice == "1")
                     {
                         Console.Clear();
                         continue;
+                    }
+                    else if (choice == "0")
+                    {
+                        InterfaceMenu();
                     }
                     else
                     {
@@ -176,16 +191,68 @@ namespace StudentGradingApp
 
 
         }
-        /*---------------------End of Student Details Input----------------------------------*/
+
+
+
+
+
+
+
 
         /*---------------This method display summary of the students and their grade------------------*/
         public static void StudentSummary()
         {
-           
+            if (Students.Count == 0)
+            {
+                Console.WriteLine("❗ No student data available.");
+                return;
+            }
+
+            Console.WriteLine("📚 Student Summary:");
+            foreach (var studentd in Students)
+            {
+                Console.WriteLine("\nStudent Details:");
+                Console.WriteLine($"👤 Name: {studentd.Name}");
+
+                foreach (var subject in studentd.Subjects)
+                {
+                    Console.WriteLine($"   📘 {subject.SubjectName}: {subject.Score}: {subject.Grade}");
+                }
+
+                Console.WriteLine(); // 
+            }
+             AverageScore(Students);
         }
         /*---------------------End of Student Summary----------------------------------*/
 
+        /*--------------------------------------Average Score --------------------------------*/
 
+        public static double AverageScore(List<Student> students){
+            if(students.Count == 0){
+                Console.WriteLine("No student available to calculate average score.");
+                return 0;
+            }
+            double totalScore = 0;
+            int totalSubjects = 0;
+            
+            foreach (var student in students)
+            {
+                foreach (var subject in student.Subjects)
+                {
+                    totalScore += subject.Score;
+                    totalSubjects++;
+                }
+            }
+            if (totalSubjects == 0)
+            {
+                Console.WriteLine("No subjects available to calculate average score.");
+                return 0;
+            }
+            double average = totalScore / totalSubjects;
+            Console.WriteLine($"The average score of all students is: {average:F2}");
+            return average;
+        }
+        /*---------------------------------------End of Average Score --------------------------------*/
 
         /*---------------------This method validates the subject name input------------------*/
         public static bool SubjectValidation(string? userInput, List<string> objectName)
@@ -200,10 +267,10 @@ namespace StudentGradingApp
             // Check if the subject name already exists in the list
             else if (objectName.Contains(userInput.ToUpper()))
             {
-                Console.WriteLine("Subject name already exists. Please enter a different subject.");
+                Console.WriteLine("Subject is entered already. Please enter a different subject.");
                 return false;
             }
-            else if (!userInput.ToUpper().All(char.IsLetter))
+            else if (!userInput.Replace(" ", "").ToUpper().All(char.IsLetter))
             {
                 Console.WriteLine("Subject name can only be letters. Please try again.");
                 return false;
@@ -212,7 +279,6 @@ namespace StudentGradingApp
             return true;
         }
         //---------------------End of Subject Name Validation----------------------------------*/
-
 
 
 
